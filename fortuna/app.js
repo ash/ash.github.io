@@ -4,10 +4,26 @@
 
   /* ================= Data ================= */
 
-  const CHAPTER_NOTES = {
-    10: 'De woorden van tekst 10 (blz. 192–193) ontbreken nog in de foto’s.',
-  };
   const LEVEL_NAMES = ['Nieuw', 'Lastig', 'Bijna', 'Gekend', 'Gekend', 'Meester'];
+
+  // One entry per language ("course"). Lesson data comes from data.js / data-greek.js.
+  const COURSES = [
+    {
+      id: 'la', lang: 'Latijn', brand: 'Fortuna', mark: 'F', hello: 'Salve', watermark: 'SPQR',
+      raw: typeof LESSONS_RAW !== 'undefined' ? LESSONS_RAW : [],
+      notes: { 10: 'De woorden van tekst 10 (blz. 192–193) ontbreken nog in de foto’s.' },
+      praise: ['Recte!', 'Bene!', 'Optime!', 'Euge!'],
+      tiers: ['Optime!', 'Bene!', 'Satis bene!', 'Perge!'],
+    },
+    {
+      id: 'gr', lang: 'Grieks', brand: 'Tyche', mark: 'Τ', hello: 'Χαῖρε', watermark: 'ΑΘΗΝΑΙ',
+      raw: typeof GREEK_LESSONS_RAW !== 'undefined' ? GREEK_LESSONS_RAW : [],
+      notes: { 5: 'Vanaf les 5 staan werkwoorden in de 1e persoon enkelvoud, bijv. λύω = losmaken (eigenlijk: ik maak los).' },
+      praise: ['Εὖ γε!', 'Καλῶς!', 'Ὀρθῶς!', 'Ἄριστα!'],
+      tiers: ['Ἄριστα!', 'Εὖ γε!', 'Καλῶς!', 'Θάρρει!'],
+    },
+  ];
+  let C = COURSES[0];
 
   function parseLine(line) {
     const i = line.indexOf(' = ');
@@ -22,29 +38,41 @@
     return { la: left, note, senses, extra };
   }
 
-  const LESSONS = LESSONS_RAW.map(raw => {
-    const l = { id: raw.id, chapter: raw.chapter, kind: raw.kind, title: raw.title || `Woorden tekst ${raw.id}` };
-    if (raw.kind === 'tekst') { l.short = `Tekst ${raw.id}`; l.label = raw.id; }
-    else {
-      l.short = raw.id.endsWith('V') ? 'Voorzetsels' : raw.kind === 'perfecta' ? 'Perfecta' : 'Herhaling';
-      l.label = `${l.short} (les ${raw.chapter})`;
-    }
-    l.words = raw.words.trim().split('\n').map(s => s.trim()).filter(Boolean).map((line, idx) => {
-      const w = parseLine(line);
-      w.lesson = l.id; w.kind = l.kind; w.idx = idx;
-      w.key = [w.la, w.note, w.extra].join('¦');
-      return w;
+  function buildCourse(c) {
+    c.lessons = c.raw.map(raw => {
+      const l = { id: raw.id, chapter: raw.chapter, kind: raw.kind, subtitle: raw.subtitle || '' };
+      if (raw.kind === 'les') {
+        l.title = `Woorden Les ${raw.chapter}${raw.subtitle ? ` (${raw.subtitle})` : ''}`;
+        l.short = l.label = `Les ${raw.chapter}`;
+      } else if (raw.kind === 'tekst') {
+        l.title = raw.title || `Woorden tekst ${raw.id}`;
+        l.short = `Tekst ${raw.id}`; l.label = raw.id;
+      } else {
+        l.title = raw.title;
+        l.short = raw.id.endsWith('V') ? 'Voorzetsels' : raw.kind === 'perfecta' ? 'Perfecta' : 'Herhaling';
+        l.label = `${l.short} (les ${raw.chapter})`;
+      }
+      l.words = raw.words.trim().split('\n').map(x => x.trim()).filter(Boolean).map((line, idx) => {
+        const w = parseLine(line);
+        w.lesson = l.id; w.kind = l.kind; w.idx = idx; w.course = c.id;
+        // Latin keys stay unprefixed so progress saved before Greek existed still matches.
+        w.key = (c.id === 'la' ? '' : c.id + '¦') + [w.la, w.note, w.extra].join('¦');
+        return w;
+      });
+      return l;
     });
-    return l;
-  });
-  const LESSON_BY_ID = new Map(LESSONS.map(l => [l.id, l]));
-  const CHAPTERS = [];
-  for (const l of [...LESSONS].sort((a, b) => a.chapter - b.chapter)) {
-    let ch = CHAPTERS.find(c => c.n === l.chapter);
-    if (!ch) CHAPTERS.push(ch = { n: l.chapter, lessons: [] });
-    ch.lessons.push(l);
+    c.byId = new Map(c.lessons.map(l => [l.id, l]));
+    c.chapters = [];
+    for (const l of [...c.lessons].sort((a, b) => a.chapter - b.chapter)) {
+      let ch = c.chapters.find(x => x.n === l.chapter);
+      if (!ch) c.chapters.push(ch = { n: l.chapter, lessons: [] });
+      ch.lessons.push(l);
+    }
+    c.words = c.lessons.flatMap(l => l.words);
+    c.single = c.chapters.every(ch => ch.lessons.length === 1);
+    c.byMeaning = new Map();
+    for (const w of c.words) { const k = meaningKey(w); if (!c.byMeaning.has(k)) c.byMeaning.set(k, []); c.byMeaning.get(k).push(w); }
   }
-  const ALL_WORDS = LESSONS.flatMap(l => l.words);
 
   /* ================= Storage ================= */
 
@@ -64,14 +92,20 @@
   }
 
   let state = load();
-  if (state.current && !state.profiles.some(p => p.id === state.current)) state.current = state.profiles[0]?.id || null;
+  function normalizeState() {
+    if (state.current && !state.profiles.some(p => p.id === state.current)) state.current = state.profiles[0]?.id || null;
+    // Selections used to be stored per profile only; they are now per profile and language.
+    for (const k of Object.keys(state.sel)) if (!k.includes(':')) { state.sel[k + ':la'] = state.sel[k]; delete state.sel[k]; }
+  }
+  normalizeState();
 
   const profile = () => state.profiles.find(p => p.id === state.current);
   const prefs = () => { const p = profile(); return (p.prefs = Object.assign({}, DEFAULT_PREFS, p.prefs)); };
   const prog = () => (state.prog[state.current] ||= {});
   const box = w => prog()[w.key]?.[0] || 0;
-  const selection = () => new Set(state.sel[state.current] || []);
-  const setSelection = set => { state.sel[state.current] = [...set]; save(); };
+  const selKey = () => `${state.current}:${C.id}`;
+  const selection = () => new Set(state.sel[selKey()] || []);
+  const setSelection = set => { state.sel[selKey()] = [...set]; save(); };
 
   function record(w, ok) {
     const p = prog();
@@ -122,7 +156,7 @@
     for (const w of words) if (!seen.has(w.key)) { seen.add(w.key); out.push(w); }
     return out;
   }
-  const wordsOf = ids => unique([...ids].flatMap(id => LESSON_BY_ID.get(id)?.words || []));
+  const wordsOf = ids => unique([...ids].flatMap(id => C.byId.get(id)?.words || []));
 
   function statsFor(words) {
     let n = 0, l1 = 0, l2 = 0, l3 = 0, sum = 0;
@@ -161,8 +195,20 @@
 
   /* ================= Answer checking ================= */
 
-  const stripMarks = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const stripMarks = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const normLatin = s => stripMarks(s).toLowerCase().replace(/j/g, 'i').replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  // Greek is compared as a simple Latin-letter skeleton, so kids can type either
+  // Greek (accents optional) or a transliteration: "anthropos", "theos", "psyche".
+  const GREEK_LETTERS = { α: 'a', β: 'b', γ: 'g', δ: 'd', ε: 'e', ζ: 'z', η: 'e', θ: 'th', ι: 'i', κ: 'k', λ: 'l', μ: 'm', ν: 'n', ξ: 'x', ο: 'o', π: 'p', ρ: 'r', σ: 's', ς: 's', τ: 't', υ: 'u', φ: 'ph', χ: 'ch', ψ: 'ps', ω: 'o' };
+  function normGreek(s) {
+    let t = stripMarks(s).toLowerCase().replace(/γ(?=[γκξχ])/g, 'n').replace(/[α-ω]/g, ch => GREEK_LETTERS[ch] || ch);
+    t = t.replace(/y/g, 'u').replace(/f/g, 'ph').replace(/kh/g, 'ch').replace(/c(?!h)/g, 'k').replace(/ks/g, 'x')
+      .replace(/w/g, 'o').replace(/j/g, 'i').replace(/(^|[^tpc])h/g, '$1')
+      .replace(/gg/g, 'ng').replace(/gk/g, 'nk').replace(/gch/g, 'nch').replace(/gx/g, 'nx');
+    return t.replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  const GREEK_ARTICLE = /^(?:o|e|to|oi|ai|ta) (?=\S)/;
+  const normForeign = s => C.id === 'gr' ? normGreek(s) : normLatin(s);
   const PRONOUNS = /^(?:(?:hij|zij|ze|het|ik|jij|je|wij|we|jullie|de|een|te|zich)\s+)+/;
   function normDutch(s) {
     const t = stripMarks(s).toLowerCase().replace(/[’‘`´]/g, "'").replace(/[^a-z0-9'\s]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -211,18 +257,22 @@
     dvCache.set(w, out);
     return out;
   }
-  function latinVariants(w) {
+  function foreignVariants(w) {
     if (lvCache.has(w)) return lvCache.get(w);
     const out = new Set();
+    const norm = w.course === 'gr' ? normGreek : normLatin;
     for (const s of [w.la, splitTop(w.la, ',')[0]])
       for (const v of expandOptional(s))
-        for (const x of expandSlash(v)) { const n = normLatin(x); if (n) out.add(n); }
+        for (const x of expandSlash(v)) {
+          const n = norm(x);
+          if (!n) continue;
+          out.add(n);
+          if (w.course === 'gr' && GREEK_ARTICLE.test(n)) out.add(n.replace(GREEK_ARTICLE, ''));
+        }
     lvCache.set(w, out);
     return out;
   }
   const meaningKey = w => normDutch(w.senses.join(' ').replace(/\{[^}]*\}/g, ' '));
-  const BY_MEANING = new Map();
-  for (const w of ALL_WORDS) { const k = meaningKey(w); if (!BY_MEANING.has(k)) BY_MEANING.set(k, []); BY_MEANING.get(k).push(w); }
 
   function lev(a, b) {
     if (Math.abs(a.length - b.length) > 2) return 3;
@@ -250,13 +300,14 @@
     for (const p of [whole, ...parts]) for (const v of vars) if (near(p, v)) return { res: 'almost' };
     return { res: 'no' };
   }
-  function checkLatin(input, w) {
-    const n = normLatin(input);
+  function checkForeign(input, w) {
+    let n = normForeign(input);
     if (!n) return { res: 'empty' };
-    const vars = latinVariants(w);
+    const vars = foreignVariants(w);
+    if (w.course === 'gr' && !vars.has(n)) n = n.replace(GREEK_ARTICLE, '');
     if (vars.has(n)) return { res: 'ok' };
-    for (const o of BY_MEANING.get(meaningKey(w)) || []) {
-      if (o.key !== w.key && (o.kind === 'perfecta') === (w.kind === 'perfecta') && latinVariants(o).has(n)) return { res: 'ok', alt: o };
+    for (const o of C.byMeaning.get(meaningKey(w)) || []) {
+      if (o.key !== w.key && (o.kind === 'perfecta') === (w.kind === 'perfecta') && foreignVariants(o).has(n)) return { res: 'ok', alt: o };
     }
     for (const v of vars) if (near(n, v)) return { res: 'almost' };
     return { res: 'no' };
@@ -265,7 +316,7 @@
   // Two words are "confusable" if either would also be a right answer for the other.
   function overlaps(a, b) {
     if (a.key === b.key) return true;
-    const la = latinVariants(a), lb = latinVariants(b);
+    const la = foreignVariants(a), lb = foreignVariants(b);
     for (const x of la) if (lb.has(x)) return true;
     const da = dutchVariants(a), db = dutchVariants(b);
     for (const x of da) if (db.has(x)) return true;
@@ -273,17 +324,35 @@
   }
   function buildOptions(item, pool) {
     const target = item.w;
-    const text = w => item.dir === 'la-nl' ? normDutch(meaningPlain(w)) : normLatin(w.la);
+    const text = w => item.dir === 'la-nl' ? normDutch(meaningPlain(w)) : normForeign(w.la);
     const picked = [target];
     const ok = c => !picked.some(p => overlaps(p, c) || text(p) === text(c)) && (c.kind === 'perfecta') === (target.kind === 'perfecta');
-    const near = ALL_WORDS.filter(w => Math.abs(LESSON_BY_ID.get(w.lesson).chapter - LESSON_BY_ID.get(target.lesson).chapter) <= 2);
-    for (const src of [pool, near, ALL_WORDS]) {
+    const near = C.words.filter(w => Math.abs(C.byId.get(w.lesson).chapter - C.byId.get(target.lesson).chapter) <= 2);
+    for (const src of [pool, near, C.words]) {
       for (const c of shuffle(src.slice())) {
         if (picked.length >= 4) break;
         if (ok(c)) picked.push(c);
       }
     }
     return shuffle(picked).map(w => ({ w, correct: w === target }));
+  }
+
+  COURSES.forEach(buildCourse);
+
+  function setCourse(id) {
+    C = COURSES.find(c => c.id === id && c.lessons.length) || COURSES[0];
+    document.documentElement.dataset.course = C.id;
+    $('.brand-mark').textContent = C.mark;
+    $('.brand-name').textContent = C.brand;
+    $('.brand-sub').textContent = `Leerwoorden ${C.lang}`;
+    document.querySelectorAll('[data-action="course"]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.course === C.id)));
+  }
+  function switchCourse(id) {
+    const p = profile();
+    if (p) { p.course = id; save(); }
+    setCourse(id);
+    view === 'list' ? renderList([], '') : renderHome();
+    window.scrollTo(0, 0);
   }
 
   /* ================= UI chrome ================= */
@@ -328,6 +397,7 @@
   function show(v) {
     view = v;
     bar.hidden = !(v === 'home' || v === 'list');
+    $('.lang-tabs').hidden = bar.hidden;
     if (!bar.hidden) renderBar();
   }
 
@@ -346,7 +416,7 @@
     const avatar = $('.avatar-pick [aria-pressed="true"]', root)?.dataset.av || '🦉';
     if (editId) Object.assign(state.profiles.find(p => p.id === editId), { name, avatar });
     else {
-      const p = { id: uid(), name, avatar, prefs: { ...DEFAULT_PREFS } };
+      const p = { id: uid(), name, avatar, course: C.id, prefs: { ...DEFAULT_PREFS } };
       state.profiles.push(p);
       state.current = p.id;
     }
@@ -357,8 +427,8 @@
     show('welcome');
     updateChip();
     app.innerHTML = `<section class="welcome">
-      <h1>Salve!</h1>
-      <p>Welkom bij de Fortuna-flashcards. Wie gaat er oefenen?</p>
+      <h1>Salve! <span class="welcome-gr">Χαῖρε!</span></h1>
+      <p>Hier oefen je je leerwoorden Latijn en Grieks. Wie gaat er oefenen?</p>
       <div class="panel" id="welcome-form">
         ${profileFormHTML()}
         <button class="btn btn-primary" data-action="save-profile">Beginnen ▸</button>
@@ -435,14 +505,14 @@
     updateChip();
     const p = profile();
     const sel = selection();
-    const all = unique(ALL_WORDS);
+    const all = unique(C.words);
     const known = all.filter(w => box(w) >= 3).length;
     const hard = all.filter(w => box(w) === 1);
     const streak = streakNow();
     app.innerHTML = `
-      <section class="hero">
+      <section class="hero" data-mark="${C.watermark}">
         <div>
-          <h1>Salve, ${esc(p.name)}!</h1>
+          <h1>${C.hello}, ${esc(p.name)}!</h1>
           <p>Kies hieronder wat je wilt oefenen.</p>
           <div class="stats">
             <span class="stat">🔥 <b>${streak}</b> ${streak === 1 ? 'dag' : 'dagen'} op rij</span>
@@ -455,9 +525,9 @@
           <button class="btn" data-action="list-all">📖 Woordenlijst</button>
         </div>
       </section>
-      <div class="section-head"><h2>Lessen</h2><p>Tik op een onderdeel om het te kiezen</p></div>
+      <div class="section-head"><h2>Lessen</h2><p>Tik op ${C.single ? 'een les om hem' : 'een onderdeel om het'} te kiezen</p></div>
       ${LEGEND}
-      <div class="chapters">${CHAPTERS.map(ch => chapterHTML(ch, sel)).join('')}</div>`;
+      <div class="chapters${C.single ? ' compact' : ''}">${C.chapters.map(ch => C.single ? singleChapterHTML(ch, sel) : chapterHTML(ch, sel)).join('')}</div>`;
   }
 
   function chapterHTML(ch, sel) {
@@ -474,8 +544,24 @@
         <span class="chapter-pct" title="Hoe goed je deze les kent">${st.pct}%</span>
       </div>
       <div class="chips">${ch.lessons.map(l => chipHTML(l, sel)).join('')}</div>
-      ${CHAPTER_NOTES[ch.n] ? `<p class="chapter-note">${esc(CHAPTER_NOTES[ch.n])}</p>` : ''}
+      ${C.notes[ch.n] ? `<p class="chapter-note">${esc(C.notes[ch.n])}</p>` : ''}
     </article>`;
+  }
+  function singleChapterHTML(ch, sel) {
+    const l = ch.lessons[0];
+    const st = statsFor(l.words);
+    const on = sel.has(l.id);
+    return `<button class="chapter chapter-single ${on ? 'has-selection' : ''}" data-action="toggle" data-id="${l.id}" aria-pressed="${on}" title="${esc(l.title)}">
+      <span class="chapter-head">
+        <span class="chapter-title"><span class="chapter-num">${ch.n}</span>
+          <span><span class="chapter-name">Les ${ch.n}</span>
+          <span class="chapter-meta">${l.subtitle ? esc(l.subtitle) + ' · ' : ''}${l.words.length} woorden</span></span></span>
+        <span class="chip-check" aria-hidden="true">✓</span>
+      </span>
+      <span class="chip-sub">${st.pct === 100 ? '🏅 alles gekend' : `${st.pct}% gekend`}</span>
+      ${meterHTML(st)}
+      ${C.notes[ch.n] ? `<span class="chapter-note">${esc(C.notes[ch.n])}</span>` : ''}
+    </button>`;
   }
   function chipHTML(l, sel) {
     const st = statsFor(l.words);
@@ -490,14 +576,14 @@
 
   function renderBar() {
     const sel = selection();
-    const ids = LESSONS.filter(l => sel.has(l.id));
+    const ids = C.lessons.filter(l => sel.has(l.id));
     const n = wordsOf(ids.map(l => l.id)).length;
     const labels = ids.map(l => l.label);
     const labelText = labels.length > 6 ? labels.slice(0, 6).join(', ') + ` en nog ${labels.length - 6}` : labels.join(', ');
     bar.innerHTML = `<div class="practice-inner">
       <div class="practice-info">${ids.length
-        ? `<strong>${plural(ids.length, 'onderdeel', 'onderdelen')} · ${n} woorden</strong><span>${esc(labelText)}</span>`
-        : '<strong>Nog niets gekozen</strong><span>Kies een of meer onderdelen hierboven</span>'}</div>
+        ? `<strong>${C.single ? plural(ids.length, 'les', 'lessen') : plural(ids.length, 'onderdeel', 'onderdelen')} · ${n} woorden</strong><span>${esc(labelText)}</span>`
+        : `<strong>Nog niets gekozen</strong><span>Kies een of meer ${C.single ? 'lessen' : 'onderdelen'} hierboven</span>`}</div>
       <div class="practice-actions">
         ${ids.length ? `<button class="btn btn-ghost" data-action="clear">Wis</button>${view === 'list' ? '' : '<button class="btn" data-action="list">📖 Lijst</button>'}` : ''}
         <button class="btn btn-primary" data-action="setup" ${ids.length ? '' : 'disabled'}>Oefenen ▸</button>
@@ -513,7 +599,7 @@
     app.innerHTML = `
       <div class="list-tools">
         <button class="btn" data-action="home">← Terug</button>
-        <input class="text-input" id="search" type="search" placeholder="Zoek een woord (Latijn of Nederlands)…" value="${esc(q)}" autocomplete="off">
+        <input class="text-input" id="search" type="search" placeholder="Zoek een woord (${C.lang} of Nederlands)…" value="${esc(q)}" autocomplete="off">
         <button class="btn" data-action="print">🖨️ Print</button>
       </div>
       ${LEGEND}
@@ -524,17 +610,17 @@
     const body = $('#list-body');
     let groups;
     if (q.trim()) {
-      const ql = normLatin(q), qd = normDutch(q);
-      groups = LESSONS.map(l => ({ l, words: l.words.filter(w =>
-        (ql && normLatin(w.la).includes(ql)) || (qd && normDutch(meaningPlain(w)).includes(qd))) }))
+      const ql = normForeign(q), qd = normDutch(q);
+      groups = C.lessons.map(l => ({ l, words: l.words.filter(w =>
+        (ql && normForeign(w.la).includes(ql)) || (qd && normDutch(meaningPlain(w)).includes(qd))) }))
         .filter(g => g.words.length);
     } else {
-      const ls = listIds.length ? LESSONS.filter(l => listIds.includes(l.id)) : LESSONS;
+      const ls = listIds.length ? C.lessons.filter(l => listIds.includes(l.id)) : C.lessons;
       groups = ls.map(l => ({ l, words: l.words }));
     }
     body.innerHTML = groups.length ? groups.map(({ l, words }) => `
       <section class="word-section">
-        <h3>${esc(l.title)} <small>les ${l.chapter} · ${plural(words.length, 'woord', 'woorden')}</small></h3>
+        <h3>${esc(l.title)} <small>${C.single ? '' : `les ${l.chapter} · `}${plural(words.length, 'woord', 'woorden')}</small></h3>
         <div class="words">${words.map(w => `
           <div class="word-row">${dotHTML(w)}
             <div class="wl-latin">${esc(w.la)}${noteHTML(w)}</div>
@@ -569,8 +655,8 @@
         </div></div>
       <div><div class="field-label">Richting</div>
         <div class="seg">
-          ${segBtn('dir', 'la-nl', pr.dir, 'Latijn → NL')}
-          ${segBtn('dir', 'nl-la', pr.dir, 'NL → Latijn')}
+          ${segBtn('dir', 'la-nl', pr.dir, `${C.lang} → NL`)}
+          ${segBtn('dir', 'nl-la', pr.dir, `NL → ${C.lang}`)}
           ${segBtn('dir', 'mix', pr.dir, 'Door elkaar')}
         </div></div>
       <div><div class="field-label">Hoeveel woorden?</div>
@@ -653,7 +739,7 @@
     const longCls = w.la.length > 22 ? ' long' : '';
     if (side === 'q') {
       return latinQ
-        ? `<span class="face-tag">${perf ? 'Perfectum' : 'Latijn'}</span>
+        ? `<span class="face-tag">${perf ? 'Perfectum' : C.lang}</span>
            <div class="latin${longCls}">${esc(w.la)}</div>${w.note ? `<span class="note">${esc(w.note)}</span>` : ''}`
         : `<span class="face-tag">Nederlands</span>
            <div class="meaning">${meaningHTML(w)}</div>
@@ -663,7 +749,7 @@
       ? `<span class="face-tag">Betekenis</span>
          <div class="small-latin">${esc(w.la)}${noteHTML(w)}</div>
          <div class="meaning">${meaningHTML(w)}</div>${w.extra ? extraHTML(w) : ''}`
-      : `<span class="face-tag">Latijn</span>
+      : `<span class="face-tag">${C.lang}</span>
          <div class="latin${longCls}">${esc(w.la)}</div>${w.note ? `<span class="note">${esc(w.note)}</span>` : ''}
          ${w.extra ? extraHTML(w) : ''}`;
   }
@@ -671,7 +757,7 @@
   function renderSession() {
     const it = S.cur;
     const b = it.lvl;
-    const lesson = LESSON_BY_ID.get(it.w.lesson);
+    const lesson = C.byId.get(it.w.lesson);
     const pct = S.done / S.total * 100;
     let body = '';
     if (S.mode === 'cards') body = cardsHTML(it);
@@ -683,7 +769,7 @@
         <div class="progress" role="progressbar" aria-label="Voortgang" aria-valuemin="0" aria-valuenow="${S.done}" aria-valuemax="${S.total}"><span style="width:${S.shownPct}%"></span></div>
         <span class="counter">${S.done} / ${S.total}</span>
       </div>
-      <div class="session-meta"><span>${esc(lesson.label === lesson.id ? `Tekst ${lesson.id}` : lesson.label)}${it.again ? ' · nog een keer' : ''}</span>
+      <div class="session-meta"><span>${esc(lesson.kind === 'tekst' ? `Tekst ${lesson.id}` : lesson.label)}${it.again ? ' · nog een keer' : ''}</span>
         <span class="lvl-badge"><i class="lvl-dot l${b}"></i>${LEVEL_NAMES[b]}</span></div>
       ${body}
     </div>`;
@@ -752,7 +838,7 @@
     return `<div class="card-static"><div class="card-face">${faceHTML(it, 'q')}</div></div>
       <form class="type-form" data-form="type" autocomplete="off">
         <input class="text-input ${cls}" id="answer" name="answer" aria-label="Jouw antwoord"
-          placeholder="${it.dir === 'la-nl' ? 'Typ de betekenis…' : 'Typ het Latijnse woord…'}"
+          placeholder="${it.dir === 'la-nl' ? 'Typ de betekenis…' : C.id === 'gr' ? 'Typ het Griekse woord (Latijnse letters mag ook)…' : 'Typ het Latijnse woord…'}"
           autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done"
           value="${esc(it.typed || '')}" ${shown ? 'disabled' : ''}>
         ${shown ? '' : '<button class="btn btn-primary" type="submit">Check</button>'}
@@ -762,7 +848,7 @@
   function submitTyped(value) {
     if (S.phase !== 'ask') return;
     const it = S.cur;
-    const check = it.dir === 'la-nl' ? checkDutch(value, it.w) : checkLatin(value, it.w);
+    const check = it.dir === 'la-nl' ? checkDutch(value, it.w) : checkForeign(value, it.w);
     if (check.res === 'empty') { $('#answer')?.classList.add('shake'); setTimeout(() => $('#answer')?.classList.remove('shake'), 350); return; }
     it.typed = value;
     it.check = check;
@@ -780,13 +866,12 @@
     renderSession();
   }
 
-  const PRAISE_OK = ['Recte!', 'Bene!', 'Optime!', 'Euge!'];
   function feedbackHTML(it) {
     const ok = it.lastOk;
     const res = it.check?.res;
     let cls = ok ? 'good' : 'bad', title;
     if (res === 'almost') { cls = 'almost'; title = 'Bijna goed! Let op de spelling.'; }
-    else if (ok) title = `${PRAISE_OK[Math.floor(Math.random() * PRAISE_OK.length)]} Goed zo ✓`;
+    else if (ok) title = `${C.praise[Math.floor(Math.random() * C.praise.length)]} Goed zo ✓`;
     else if (res === 'skip') title = 'Geeft niet — zo is het:';
     else title = 'Helaas, nog niet goed';
     const alt = it.check?.alt ? `<div>Ook goed! Hier werd bedoeld: ${latinInline(it.w.la)}</div>` : '';
@@ -808,10 +893,11 @@
     show('results');
     history.replaceState(null, '', location.pathname + location.search);
     const pct = S.total ? S.firstOk / S.total : 0;
-    const [praise, nl, stars] = pct >= .95 ? ['Optime!', 'Uitstekend — alles in één keer goed!', 3]
-      : pct >= .75 ? ['Bene!', 'Goed gedaan!', 2]
-      : pct >= .5 ? ['Satis bene!', 'Aardig goed — oefen de fouten nog even.', 1]
-      : ['Perge!', 'Ga door, het komt steeds beter!', 0];
+    const [tier, nl, stars] = pct >= .95 ? [0, 'Uitstekend — alles in één keer goed!', 3]
+      : pct >= .75 ? [1, 'Goed gedaan!', 2]
+      : pct >= .5 ? [2, 'Aardig goed — oefen de fouten nog even.', 1]
+      : [3, 'Ga door, het komt steeds beter!', 0];
+    const praise = C.tiers[tier];
     const missed = unique(S.missed);
     app.innerHTML = `<div class="results">
       <div class="result-card">
@@ -844,7 +930,8 @@
       case 'home': closeDialog(); if (view === 'session' && !confirmQuit()) return; renderHome(); window.scrollTo(0, 0); break;
       case 'profiles': openProfiles(); break;
       case 'close': closeDialog(); break;
-      case 'switch': state.current = el.dataset.pid; save(); closeDialog(); renderHome(); break;
+      case 'switch': state.current = el.dataset.pid; save(); closeDialog(); setCourse(profile().course); renderHome(); break;
+      case 'course': if (el.dataset.course !== C.id) switchCourse(el.dataset.course); break;
       case 'new-profile': openProfileForm(null); break;
       case 'edit-profile': openProfileForm(profile()); break;
       case 'pick-avatar':
@@ -881,7 +968,7 @@
       }
       case 'toggle-chapter': {
         const sel = selection();
-        const ids = CHAPTERS.find(c => c.n === +el.dataset.ch).lessons.map(l => l.id);
+        const ids = C.chapters.find(c => c.n === +el.dataset.ch).lessons.map(l => l.id);
         const all = ids.every(id => sel.has(id));
         ids.forEach(id => all ? sel.delete(id) : sel.add(id));
         setSelection(sel); renderHome();
@@ -893,10 +980,10 @@
       case 'print': window.print(); break;
       case 'setup': {
         const ids = [...selection()];
-        openSetup(wordsOf(ids), LESSONS.filter(l => ids.includes(l.id)).map(l => l.label).join(', '));
+        openSetup(wordsOf(ids), C.lessons.filter(l => ids.includes(l.id)).map(l => l.label).join(', '));
         break;
       }
-      case 'hard': openSetup(unique(ALL_WORDS).filter(w => box(w) === 1), 'Lastige woorden'); break;
+      case 'hard': openSetup(unique(C.words).filter(w => box(w) === 1), 'Lastige woorden'); break;
       case 'seg': {
         const pr = prefs();
         const v = el.dataset.v;
@@ -955,6 +1042,8 @@
   });
 
   function boot() {
+    normalizeState();
+    setCourse(profile()?.course);
     updateChip();
     if (location.hash) history.replaceState(null, '', location.pathname + location.search);
     profile() ? renderHome() : renderWelcome();

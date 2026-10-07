@@ -65,6 +65,12 @@
   color-scheme: dark;
 }
 
+:root[data-course="gr"] { --accent: #2f6690; --accent-ink: #f3f8fc; --accent-soft: #d9e7f2; }
+@media (prefers-color-scheme: dark) {
+  :root[data-course="gr"]:not([data-theme="light"]) { --accent: #6fa9d8; --accent-ink: #11171d; --accent-soft: #1d3447; }
+}
+:root[data-course="gr"][data-theme="dark"] { --accent: #6fa9d8; --accent-ink: #11171d; --accent-soft: #1d3447; }
+
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
@@ -113,6 +119,21 @@ button { cursor: pointer; }
   background: var(--surface); border: 1px solid var(--line);
   font-weight: 800; box-shadow: var(--shadow);
 }
+/* Language tabs */
+.lang-tabs {
+  display: flex; gap: 4px; padding: 4px; margin-left: auto;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px;
+}
+.lang-tabs button {
+  border: 0; background: transparent; border-radius: 999px; padding: 7px 16px;
+  font-weight: 800; font-size: 14.5px; color: var(--ink-soft);
+  transition: background .15s ease, color .15s ease;
+}
+.lang-tabs button:hover { color: var(--ink); }
+.lang-tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: 0 2px 6px color-mix(in srgb, var(--accent) 35%, transparent); }
+.topbar .profile-chip { margin-left: 4px; }
+.lang-tabs[hidden] + .profile-chip { margin-left: auto; }
+
 .avatar {
   width: 32px; height: 32px; border-radius: 50%;
   display: grid; place-items: center; font-size: 19px;
@@ -157,7 +178,7 @@ kbd {
   position: relative; overflow: hidden;
 }
 .hero::after {
-  content: "SPQR"; position: absolute; right: -10px; bottom: -28px;
+  content: attr(data-mark); position: absolute; right: -10px; bottom: -28px;
   font-family: var(--serif); font-size: 120px; font-weight: 700; letter-spacing: .05em;
   color: var(--ink); opacity: .04; pointer-events: none;
 }
@@ -197,6 +218,20 @@ kbd {
 .chapter-meta { display: block; font-size: 12px; color: var(--ink-faint); font-weight: 700; }
 .chapter-pct { font-size: 13px; font-weight: 800; color: var(--ink-soft); }
 .chapter-note { margin: 8px 2px 0; font-size: 12.5px; color: var(--ink-faint); font-weight: 600; }
+
+.chapters.compact { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.chapter-single {
+  display: flex; flex-direction: column; align-items: stretch; gap: 10px; width: 100%;
+  text-align: left; font: inherit; color: inherit; cursor: pointer; border-width: 2px;
+}
+.chapter-single:hover { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.chapter-single:active { transform: scale(.99); }
+.chapter-single .chapter-head { margin-bottom: 0; }
+.chapter-single .chip-check { position: static; flex: none; }
+.chapter-single[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent-soft) 40%, var(--surface)); }
+.chapter-single[aria-pressed="true"] .chip-check { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chapter-single .chapter-note { margin: 0; }
+.welcome-gr { color: var(--ink-soft); }
 
 .chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
 .chip {
@@ -434,6 +469,9 @@ dialog::backdrop { background: rgba(30, 20, 10, .45); backdrop-filter: blur(3px)
 @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
 
 /* ---------- Responsive ---------- */
+@media (max-width: 420px) {
+  .brand-text { display: none; }
+}
 @media (max-width: 640px) {
   main { padding: 14px 16px 150px; }
   .hero { grid-template-columns: 1fr; padding: 18px; }
@@ -449,6 +487,9 @@ dialog::backdrop { background: rgba(30, 20, 10, .45); backdrop-filter: blur(3px)
   .practice-info span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .chapters { grid-template-columns: 1fr; }
   .brand-sub { display: none; }
+  .lang-tabs button { padding: 7px 11px; font-size: 13.5px; }
+  .profile-chip { padding-right: 8px; }
+  #chip-name { display: none; }
   .options { grid-template-columns: 1fr; }
   .option { min-height: 56px; }
   .card-face { min-height: 260px; }

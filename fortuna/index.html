@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Fortuna Flashcards</title>
-  <meta name="description" content="Oefen de Latijnse leerwoorden van Fortuna met flashcards, quiz en typen.">
+  <meta name="description" content="Oefen je leerwoorden Latijn en Grieks met flashcards, quiz en typen.">
   <meta name="theme-color" content="#f6efe2" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#1a1714" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23b8532c'/%3E%3Ctext x='32' y='44' font-family='Georgia,serif' font-size='34' text-anchor='middle' fill='%23fff6e8'%3EF%3C/text%3E%3C/svg%3E">
@@ -22,6 +22,10 @@
         <span class="brand-sub">Leerwoorden Latijn</span>
       </span>
     </button>
+    <nav class="lang-tabs" role="tablist" aria-label="Taal" hidden>
+      <button role="tab" data-action="course" data-course="la" aria-selected="true">Latijn</button>
+      <button role="tab" data-action="course" data-course="gr" aria-selected="false">Grieks</button>
+    </nav>
     <button class="profile-chip" data-action="profiles" aria-label="Wissel van speler">
       <span class="avatar" id="chip-avatar">🦉</span>
       <span id="chip-name">Speler</span>
@@ -34,6 +38,7 @@
   <div id="toast" role="status" aria-live="polite"></div>
 
   <script src="data.js"></script>
+  <script src="data-greek.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
