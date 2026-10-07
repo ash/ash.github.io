@@ -16,7 +16,7 @@
       tiers: ['Optime!', 'Bene!', 'Satis bene!', 'Perge!'],
     },
     {
-      id: 'gr', lang: 'Grieks', brand: 'Tyche', mark: 'Τ', hello: 'Χαῖρε', watermark: 'ΑΘΗΝΑΙ',
+      id: 'gr', lang: 'Grieks', brand: 'Pallas', mark: 'Π', hello: 'Χαῖρε', watermark: 'ΑΘΗΝΑΙ',
       raw: typeof GREEK_LESSONS_RAW !== 'undefined' ? GREEK_LESSONS_RAW : [],
       notes: { 5: 'Vanaf les 5 staan werkwoorden in de 1e persoon enkelvoud, bijv. λύω = losmaken (eigenlijk: ik maak los).' },
       praise: ['Εὖ γε!', 'Καλῶς!', 'Ὀρθῶς!', 'Ἄριστα!'],
