@@ -491,8 +491,124 @@ fugi = vluchten ~ fugio (fugĕre)
 constiti = gaan staan, blijven staan ~ consisto (consistĕre)
 coepi = beginnen ~ –
 reliqui = verlaten, achterlaten ~ relinquo (relinquĕre)
+defendi = verdedigen, beschermen ~ defendo (defendĕre)
+steti = staan ~ sto (stare)
+obsedi = bezetten, belegeren ~ obsideo (obsidēre)
+potui = kunnen ~ possum (posse)
 `},
-// NB: pagina 192–193 (Herhaling na les 9, woorden tekst 10A/10B …) ontbreken in de foto's.
+{ id: "9H", chapter: 9, kind: "herhaling", title: "Herhaling moeilijke woorden", words: `
+iterum = weer, opnieuw
+-ne = …? {leidt een vraagzin in; niet vertalen}
+malum = ramp
+gero, gessi (gerĕre) = dragen | (oorlog) voeren
+pario, peperi (parĕre) = voortbrengen
+at = maar
+denique = tenslotte
+opprimo, oppressi (opprimĕre) = neerdrukken | overweldigen, overvallen
+praeterea = bovendien
+interficio, interfeci (interficĕre) = doden
+statim = meteen
+curro, cucurri (currĕre) = rennen
+`},
+{ id: "10A", chapter: 10, kind: "tekst", words: `
+facio, feci (facĕre) = maken | doen
+turba = menigte
+do, dedi (dare) = geven
+minus [bijw.] = minder
+castra, castrorum [onz. mv.] = legerkamp
+ideo = daarom
+in castris = in het legerkamp
+adsum, adfui (adesse) = aanwezig zijn | helpen
+occido, occidi (occidĕre) = doden
+via = weg
+ut = (zo)als | zodra (als)
+effugio, effugi (effugĕre) = ontvluchten, ontkomen
+voco (vocare) = roepen, noemen
+sedeo, sedi (sedēre) = zitten
+erro (errare) = rondzwerven, dwalen | zich vergissen
+quam = dan {na vergrotende trap}
+caedes, caedis [vrl.] = moord, slachting
+volo, volui (velle) = willen
+`},
+{ id: "10B", chapter: 10, kind: "tekst", words: `
+mitto, misi (mittĕre) = sturen, zenden
+iubeo, iussi (iubēre) = bevelen
+addo, addidi (addĕre) = toevoegen
+nihil = niets
+nec = en niet, ook niet
+longus, longa, longum = lang
+id = het | dit
+ordo, ordinis [mnl.] = rij
+manus [vrl.] = hand
+caveo, cavi (cavēre) [+ acc.] = op zijn hoede zijn voor, oppassen voor
+accendo, accendi (accendĕre) = in brand steken, aansteken
+dolor, doloris [mnl.] = pijn, verdriet
+dimitto, dimisi (dimittĕre) = wegsturen, laten gaan
+respondeo, respondi (respondēre) = antwoorden
+moveo, movi (movēre) = bewegen, verplaatsen | indruk maken op, ontroeren
+Romam = naar Rome {bij werkwoorden van ‘gaan’}
+beneficium = weldaad
+insidiae [mv.] = hinderlaag
+tuus, tua, tuum = jouw
+moneo, monui (monēre) = waarschuwen
+perdo, perdidi (perdĕre) = te gronde richten | verliezen
+dexter, dextra, dextrum = rechts, rechter-
+paulo post = korte tijd later
+me [acc.] = mij
+`},
+{ id: "10C", chapter: 10, kind: "tekst", words: `
+eligo, elegi (eligĕre) = uitkiezen
+virgo, virginis = meisje, maagd
+libero (liberare) = bevrijden
+nuntius = bode | bericht
+constituo, constitui (constituĕre) = stellen, plaatsen | vaststellen, besluiten
+duco, duxi (ducĕre) = leiden, brengen
+ripa = oever
+rumpo, rupi (rumpĕre) = breken, verbreken
+eas [acc. vrl. mv.] = hen | deze, die
+telum = werptuig, {mv.} wapens
+non solum … sed etiam = niet alleen … maar ook
+fuga = vlucht | verbanning
+tamen = toch
+flumen, fluminis [onz.] = rivier
+pervenio, perveni (pervenire) = (aan)komen, bereiken
+foedus, foederis [onz.] = verdrag, verbond
+remitto, remisi (remittĕre) = terugsturen | loslaten
+iniuria = onrecht
+educo, eduxi (educĕre) = naar buiten leiden, wegleiden
+promitto, promisi (promittĕre) = beloven
+maxime [bijw.] = het meest, vooral
+reddo, reddidi (reddĕre) = teruggeven
+custos, custodis [mnl.] = bewaker
+`},
+{ id: "10P", chapter: 10, kind: "perfecta", title: "Herhaling onregelmatige perfecta", words: `
+feci = maken | doen ~ facio (facĕre)
+dedi = geven ~ do (dare)
+sedi = zitten ~ sedeo (sedēre)
+constitui = stellen, plaatsen | vaststellen, besluiten ~ constituo (constituĕre)
+dimisi = wegsturen, laten gaan ~ dimitto (dimittĕre)
+remisi = terugsturen | loslaten ~ remitto (remittĕre)
+perveni = (aan)komen, bereiken ~ pervenio (pervenire)
+addidi = toevoegen ~ addo (addĕre)
+promisi = beloven ~ promitto (promittĕre)
+elegi = uitkiezen ~ eligo (eligĕre)
+iussi = bevelen ~ iubeo (iubēre)
+eduxi = naar buiten leiden, wegleiden ~ educo (educĕre)
+misi = sturen, zenden ~ mitto (mittĕre)
+effugi = ontvluchten, ontkomen ~ effugio (effugĕre)
+rupi = breken, verbreken ~ rumpo (rumpĕre)
+duxi = leiden, brengen ~ duco (ducĕre)
+respondi = antwoorden ~ respondeo (respondēre)
+reddidi = teruggeven ~ reddo (reddĕre)
+cavi = op zijn hoede zijn voor, oppassen voor ~ caveo (cavēre) + acc.
+accendi = in brand steken, aansteken ~ accendo (accendĕre)
+occidi = doden ~ occido (occidĕre)
+movi = bewegen, verplaatsen | indruk maken op, ontroeren ~ moveo (movēre)
+perdidi = te gronde richten | verliezen ~ perdo (perdĕre)
+monui = waarschuwen ~ moneo (monēre)
+volui = willen ~ volo (velle)
+adfui = aanwezig zijn | helpen ~ adsum (adesse)
+`},
 { id: "10H", chapter: 10, kind: "herhaling", title: "Herhaling moeilijke woorden", words: `
 olim = ooit, eens, vroeger
 excito (excitare) = (op)wekken | opjagen

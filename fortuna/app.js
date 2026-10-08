@@ -11,7 +11,7 @@
     {
       id: 'la', lang: 'Latijn', brand: 'Fortuna', mark: 'F', hello: 'Salve', watermark: 'SPQR',
       raw: typeof LESSONS_RAW !== 'undefined' ? LESSONS_RAW : [],
-      notes: { 10: 'De woorden van tekst 10 (blz. 192–193) ontbreken nog in de foto’s.' },
+      notes: { 9: 'Onthoud: comprehendĕre, fugĕre en defendĕre hebben dezelfde stam in het praesens als in het perfectum.' },
       praise: ['Recte!', 'Bene!', 'Optime!', 'Euge!'],
       tiers: ['Optime!', 'Bene!', 'Satis bene!', 'Perge!'],
     },
