@@ -817,6 +817,21 @@ cogo, coëgi (cogĕre) = dwingen | bijeenbrengen
 specto (spectare) = kijken naar, zien
 propter [+ acc.] = vanwege, door
 tango, tetigi (tangĕre) = aanraken
+`},
+{ id: "13B", chapter: 13, kind: "tekst", words: `
+mille = duizend
+strepitus = lawaai
+tempto (temptare) = proberen
+ingens, ingentis = geweldig, enorm
+ira = woede
+brevis, breve = kort
+quod = omdat
+priusquam = voordat
+nocte [abl.] = 's nachts
+auxilium = hulp
+peto, peti(v)i (petĕre) a(b) [+ abl.] = vragen aan
+ne … quidem = zelfs niet
+sentio, sensi (sentire) = voelen, bemerken
 egregius, egregia, egregium = uitstekend, voortreffelijk
 dum = terwijl
 deicio, deieci (deicĕre) = naar beneden werpen, laten vallen
@@ -833,21 +848,6 @@ patria = vaderland
 appello (appellare) = toespreken | noemen
 despero (desperare) [+ acc.] = wanhopen (aan)
 sacer, sacra, sacrum = heilig | {+ gen.} gewijd aan
-`},
-{ id: "13B", chapter: 13, kind: "tekst", words: `
-mille = duizend
-strepitus = lawaai
-tempto (temptare) = proberen
-ingens, ingentis = geweldig, enorm
-ira = woede
-brevis, breve = kort
-quod = omdat
-priusquam = voordat
-nocte [abl.] = 's nachts
-auxilium = hulp
-peto, peti(v)i (petĕre) a(b) [+ abl.] = vragen aan
-ne … quidem = zelfs niet
-sentio, sensi (sentire) = voelen, bemerken
 `},
 { id: "13P", chapter: 13, kind: "perfecta", title: "Herhaling onregelmatige perfecta", words: `
 peti(v)i = vragen | streven naar ~ peto (petĕre)
