@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en" data-theme="nero">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Stemma — Latin &amp; Greek Roots</title>
+  <meta name="description" content="Latin, Ancient Greek and Modern Greek, read through the languages they became: a dictionary drawn as family trees, three grammars, texts with an Italian, Spanish or Modern Greek lens.">
+  <meta name="theme-color" content="#0E0D0C">
+  <link rel="icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Gentium Book Plus: the fallback reading face where Palatino is not installed (it draws macrons and polytonic Greek) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+  <link rel="stylesheet" href="css/stemma.css">
+  <script>
+    // Apply saved appearance and size before first paint.
+    try {
+      const s = JSON.parse(localStorage.getItem("stemma.settings") || "{}");
+      if (s.appearance) document.documentElement.dataset.theme = s.appearance;
+      if (s.scale) document.documentElement.style.setProperty("--scale", s.scale);
+      if (s.face) document.documentElement.dataset.face = s.face;
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header id="bar" class="bar" hidden></header>
+  <main id="main" tabindex="-1">
+    <div class="splash" role="status">
+      <div class="caps splash-title">Stemma</div>
+      <div class="meander" aria-hidden="true"></div>
+      <p class="splash-note">Loading the lexicon…</p>
+    </div>
+  </main>
+  <div id="sheet" class="sheet" hidden></div>
+  <noscript><p style="padding:2rem">Stemma needs JavaScript to run.</p></noscript>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
