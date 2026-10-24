@@ -1,4 +1,5 @@
 // Woordenlijst Grieks per les (blz. 173–178), transcribed from img-greek/IMG_3672 … IMG_3677.
+// Lessons 12 and 13 are split per text (12A–12C, 13A–13B) following the "Woorden tekst" lists.
 // Same line format as data.js:  greek [note] = meaning | sense 2 {italic remark}
 
 const GREEK_LESSONS_RAW = [
@@ -378,75 +379,81 @@ const GREEK_LESSONS_RAW = [
 τρέφω, aor. ἔθρεψα = voeden | opvoeden
 ἔτεκον (inf. τεκεῖν) = ik baarde, ik bracht ter wereld {aor. van τίκτω}
 `},
-{ id: "12", chapter: 12, kind: "les", words: `
-φυλάττω = bewaken
-ἀδικέω = onrecht doen | onrechtvaardig (be)handelen
-διαφέρω = verschillen
-ἀμείνων (ἀμείνονος) = beter
-βέλτιστος = best | zeer goed
-μείζων (μείζονος) = groter
-βλάπτω = schade toebrengen, benadelen
-γιγνώσκω = (leren) kennen | inzien, begrijpen
-δειλός = laf | ongelukkig
-τάχιστος = snelst | zeer/heel snel
-διὰ τοῦτο = daarom {lett.: door dát}
-ἔφυγον (inf. φυγεῖν) [+ acc.] = ik vluchtte (voor) {aor. van φεύγω}
-ἆρα = {geeft aan dat er een vraagzin volgt}
-ἤ = of | dan {na comparativus}
-πλείων (onz. πλέον) (πλείονος) = meer
-ἡ βουλή = plan, besluit | raad, advies
-ὡς τάχιστα = zo snel mogelijk {bijwoord}
-ἡ γῆ = aarde | grond, land
-κρίνω = oordelen, beoordelen
+{ id: "12A", chapter: 12, kind: "tekst", words: `
 ἡ τιμή = eer, eerbewijs
-βελτίων (βελτίονος) = beter, bekwamer
-ἥττων (ἥττονος) = minder, zwakker
-κράτιστος = sterkst, best | zeer sterk, zeer goed
-κρείττων (κρείττονος) = beter, sterker
-μάλιστα = het meest, vooral {bijwoord}
-μᾶλλον = meer {bijwoord}
-μέγιστος = grootst | zeer groot
-ὁ δόλος = list
-κακίων (κακίονος) = slechter
-ὁ Ζεύς, Διός = Zeus
-πλεῖστος = meeste(n) | zeer vele(n)
-πλέον = meer {bijwoord}
-πότερος; = wie van beide(n)?
-σεαυτόν, σεαυτήν = jezelf {accusativus manl., vrl. enk.}
-ἡ νύξ (νυκτός) = nacht
-ἡ σοφία = wijsheid | slimheid
-σκοπέω = bekijken, letten op
-ὁ πολέμιος = vijand
 σοφός = verstandig, wijs | slim
-ὡς = (zo)als
-ἔσχον (inf. σχεῖν) = ik had, ik kreeg {aor. van ἔχω}
+μέγιστος = grootst | zeer groot
+μάλιστα = het meest, vooral {bijwoord}
+διαφέρω = verschillen
+κρείττων (κρείττονος) = beter, sterker
+βελτίων (βελτίονος) = beter, bekwamer
+ὁ πολέμιος = vijand
+φυλάττω = bewaken
+ἔφυγον (inf. φυγεῖν) [+ acc.] = ik vluchtte (voor) {aor. van φεύγω}
+δειλός = laf | ongelukkig
+κακίων (κακίονος) = slechter
+ἀμείνων (ἀμείνονος) = beter
+ἤ = of | dan {na comparativus}
+σκοπέω = bekijken, letten op
 `},
-{ id: "13", chapter: 13, kind: "les", words: `
-ἔτι = nog
-ἀλλήλους = elkaar {accusativus}
-ἀναγκαῖος = noodzakelijk, onvermijdelijk
+{ id: "12B", chapter: 12, kind: "tekst", words: `
+κράτιστος = sterkst, best | zeer sterk, zeer goed
+μείζων (μείζονος) = groter
+διὰ τοῦτο = daarom {lett.: door dát}
+βέλτιστος = best | zeer goed
+ὁ Ζεύς, Διός = Zeus
+ὡς = (zo)als
+ἆρα = {geeft aan dat er een vraagzin volgt}
+ἡ σοφία = wijsheid | slimheid
+ὁ δόλος = list
+μᾶλλον = meer {bijwoord}
+ἡ νύξ (νυκτός) = nacht
+γιγνώσκω = (leren) kennen | inzien, begrijpen
+ἡ βουλή = plan, besluit | raad, advies
+πότερος; = wie van beide(n)?
+κρίνω = oordelen, beoordelen
+πλέον = meer {bijwoord}
+βλάπτω = schade toebrengen, benadelen
+πλεῖστος = meeste(n) | zeer vele(n)
+ἀδικέω = onrecht doen | onrechtvaardig (be)handelen
+`},
+{ id: "12C", chapter: 12, kind: "tekst", words: `
+ἔσχον (inf. σχεῖν) = ik had, ik kreeg {aor. van ἔχω}
+ἥττων (ἥττονος) = minder, zwakker
+σεαυτόν, σεαυτήν = jezelf {accusativus manl., vrl. enk.}
+πλείων (onz. πλέον) (πλείονος) = meer
+ἡ γῆ = aarde | grond, land
+τάχιστος = snelst | zeer/heel snel
+ὡς τάχιστα = zo snel mogelijk {bijwoord}
+`},
+{ id: "13A", chapter: 13, kind: "tekst", words: `
 ὁ πολίτης = burger
-βάλλω, aor. ἔβαλον = gooien, werpen
-δῆλόν ἐστι(ν) [+ A.c.I.] = het is duidelijk (dat)
-οὗτος, αὕτη, τοῦτο = deze/dit, die/dat | hij, zij, het
-δῆλος = duidelijk
-ἀναγκαῖόν ἐστι(ν) [+ A.c.I.] = het is noodzakelijk/onvermijdelijk (dat)
-διώκω = achtervolgen
-ἐκεῖνος, ἐκείνη, ἐκεῖνο = die, dat | hij, zij, het (daar)
-κάλλιστος = mooist, zeer/heel mooi
-λανθάνω [+ acc.] = verborgen zijn voor, ontgaan aan
-ὁ αὐτὸς καί = dezelfde als
-τὸ σημεῖον = teken
-ὅδε, ἥδε, τόδε = deze, dit {mnl., vrl., onz.}
-πότερον…ἤ = (of)…of {in een vraagzin}
-πρὸς τούτοις = bovendien {lett. bij die dingen}
-τὸ αὐτό = hetzelfde
-τὸ γόνυ (γόνατος) = knie
 τρέχω = rennen
-δοκέω, aor. ἔδοξα [+ dat.] = (toe)schijnen (aan)
 φρονέω = verstandig zijn
 ἄπιστος = ongelofelijk | onbetrouwbaar
 χρή [+ inf./A.c.I.] = het is nodig om/dat, het moet
+δῆλος = duidelijk
+δῆλόν ἐστι(ν) [+ A.c.I.] = het is duidelijk (dat)
+ἐκεῖνος, ἐκείνη, ἐκεῖνο = die, dat | hij, zij, het (daar)
+οὗτος, αὕτη, τοῦτο = deze/dit, die/dat | hij, zij, het
+πρὸς τούτοις = bovendien {lett. bij die dingen}
+βάλλω, aor. ἔβαλον = gooien, werpen
+τὸ αὐτό = hetzelfde
+ἀλλήλους = elkaar {accusativus}
+τὸ σημεῖον = teken
+ὅδε, ἥδε, τόδε = deze, dit {mnl., vrl., onz.}
+ἀναγκαῖος = noodzakelijk, onvermijdelijk
+ἀναγκαῖόν ἐστι(ν) [+ A.c.I.] = het is noodzakelijk/onvermijdelijk (dat)
+`},
+{ id: "13B", chapter: 13, kind: "tekst", words: `
 ὅτε = toen, wanneer {voegwoord}
+λανθάνω [+ acc.] = verborgen zijn voor, ontgaan aan
+διώκω = achtervolgen
+τὸ γόνυ (γόνατος) = knie
+ὁ αὐτὸς καί = dezelfde als
+πότερον…ἤ = (of)…of {in een vraagzin}
+δοκέω, aor. ἔδοξα [+ dat.] = (toe)schijnen (aan)
+κάλλιστος = mooist, zeer/heel mooi
+ἔτι = nog
 `},
 ];

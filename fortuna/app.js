@@ -96,6 +96,9 @@
     if (state.current && !state.profiles.some(p => p.id === state.current)) state.current = state.profiles[0]?.id || null;
     // Selections used to be stored per profile only; they are now per profile and language.
     for (const k of Object.keys(state.sel)) if (!k.includes(':')) { state.sel[k + ':la'] = state.sel[k]; delete state.sel[k]; }
+    // Greek lessons 12 and 13 were split into texts 12A–12C and 13A–13B.
+    const split = { 12: ['12A', '12B', '12C'], 13: ['13A', '13B'] };
+    for (const k of Object.keys(state.sel)) if (k.endsWith(':gr')) state.sel[k] = [...new Set(state.sel[k].flatMap(id => split[id] || [id]))];
   }
   normalizeState();
 
@@ -527,7 +530,7 @@
       </section>
       <div class="section-head"><h2>Lessen</h2><p>Tik op ${C.single ? 'een les om hem' : 'een onderdeel om het'} te kiezen</p></div>
       ${LEGEND}
-      <div class="chapters${C.single ? ' compact' : ''}">${C.chapters.map(ch => C.single ? singleChapterHTML(ch, sel) : chapterHTML(ch, sel)).join('')}</div>`;
+      <div class="chapters${C.single ? ' compact' : ''}">${C.chapters.map(ch => ch.lessons.length === 1 ? singleChapterHTML(ch, sel) : chapterHTML(ch, sel)).join('')}</div>`;
   }
 
   function chapterHTML(ch, sel) {
@@ -620,7 +623,7 @@
     }
     body.innerHTML = groups.length ? groups.map(({ l, words }) => `
       <section class="word-section">
-        <h3>${esc(l.title)} <small>${C.single ? '' : `les ${l.chapter} · `}${plural(words.length, 'woord', 'woorden')}</small></h3>
+        <h3>${esc(l.title)} <small>${l.kind === 'les' ? '' : `les ${l.chapter} · `}${plural(words.length, 'woord', 'woorden')}</small></h3>
         <div class="words">${words.map(w => `
           <div class="word-row">${dotHTML(w)}
             <div class="wl-latin">${esc(w.la)}${noteHTML(w)}</div>
