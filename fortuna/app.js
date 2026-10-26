@@ -720,18 +720,20 @@
     else S.queue.splice(Math.min(3, S.queue.length), 0, it);
   }
 
-  function override() {
+  // The learner corrects the typed-answer check by hand: "Ik had het toch goed" / "Toch niet goed".
+  function override(ok) {
     const it = S.cur;
     const i = S.queue.indexOf(it);
     if (i >= 0) S.queue.splice(i, 1);
     if (it.tries === 1 && it.undo) {
       it.undo();
-      it.undo = record(it.w, true);
-      S.firstOk++;
-      S.missed = S.missed.filter(w => w !== it.w);
+      it.undo = record(it.w, ok);
+      if (ok) { S.firstOk++; S.missed = S.missed.filter(w => w !== it.w); }
+      else { S.firstOk--; S.missed.push(it.w); }
     }
-    it.lastOk = true;
-    S.done++;
+    it.lastOk = ok;
+    if (ok) S.done++;
+    else { S.done--; S.queue.splice(Math.min(3, S.queue.length), 0, it); }
     next();
   }
 
@@ -879,13 +881,15 @@
     else title = 'Helaas, nog niet goed';
     const alt = it.check?.alt ? `<div>Ook goed! Hier werd bedoeld: ${latinInline(it.w.la)}</div>` : '';
     const typed = S.mode === 'type' && it.typed && !ok ? `<div>Jij schreef: <i>${esc(it.typed)}</i></div>` : '';
-    const canOverride = S.mode === 'type' && !ok && res === 'no';
+    const fix = S.mode !== 'type' ? ''
+      : ok ? '<button class="btn btn-small btn-ghost" data-action="override-wrong">Toch niet goed</button>'
+      : res === 'no' ? '<button class="btn btn-small btn-ghost" data-action="override">Ik had het toch goed</button>' : '';
     return `<div class="feedback ${cls}" role="status">
       <div class="feedback-title">${title}</div>
       ${typed}${alt}
       <div class="fb-answer">${fullAnswerHTML(it.w)}</div>
       <div class="feedback-actions">
-        ${canOverride ? '<button class="btn btn-small btn-ghost" data-action="override">Ik had het toch goed</button>' : '<span></span>'}
+        ${fix || '<span></span>'}
         <button class="btn btn-primary" data-action="next">Verder <kbd>enter</kbd></button>
       </div>
     </div>`;
@@ -1010,7 +1014,8 @@
       case 'choose': choose(+el.dataset.i); break;
       case 'dontknow': dontKnow(); break;
       case 'next': next(); break;
-      case 'override': override(); break;
+      case 'override': override(true); break;
+      case 'override-wrong': override(false); break;
       case 'again': startSession(S.src, { ...S.opts }, S.label); break;
       case 'retry-missed': startSession(unique(S.missed), { ...S.opts, count: 'all', onlyNew: false }, 'Fouten'); break;
     }
