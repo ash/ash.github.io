@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=f8710362fc">
+  <link rel="stylesheet" href="styles.css?v=93d5e5664e">
 </head>
 <body>
   <header class="topbar">
@@ -26,6 +26,9 @@
       <button role="tab" data-action="course" data-course="la" aria-selected="true">Latijn</button>
       <button role="tab" data-action="course" data-course="gr" aria-selected="false">Grieks</button>
     </nav>
+    <button class="dict-btn" data-action="dict" aria-label="Woordenboek" title="Woordenboek: alle woorden van A tot Z">
+      <span aria-hidden="true">🔤</span><span class="dict-btn-text">Woordenboek</span>
+    </button>
     <button class="profile-chip" data-action="profiles" aria-label="Wissel van speler">
       <span class="avatar" id="chip-avatar">🦉</span>
       <span id="chip-name">Speler</span>
@@ -37,8 +40,8 @@
   <dialog id="dialog" aria-labelledby="dialog-title"></dialog>
   <div id="toast" role="status" aria-live="polite"></div>
 
-  <script src="data.js?v=f8710362fc"></script>
-  <script src="data-greek.js?v=f8710362fc"></script>
-  <script src="app.js?v=f8710362fc"></script>
+  <script src="data.js?v=93d5e5664e"></script>
+  <script src="data-greek.js?v=93d5e5664e"></script>
+  <script src="app.js?v=93d5e5664e"></script>
 </body>
 </html>

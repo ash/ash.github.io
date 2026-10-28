@@ -354,7 +354,9 @@
     const p = profile();
     if (p) { p.course = id; save(); }
     setCourse(id);
-    view === 'list' ? renderList([], '') : renderHome();
+    if (view === 'list') renderList([], '');
+    else if (view === 'dict') renderDict($('#dict-search')?.value || '');
+    else renderHome();
     window.scrollTo(0, 0);
   }
 
@@ -400,7 +402,8 @@
   function show(v) {
     view = v;
     bar.hidden = !(v === 'home' || v === 'list');
-    $('.lang-tabs').hidden = bar.hidden;
+    $('.lang-tabs').hidden = bar.hidden && v !== 'dict';
+    $('.dict-btn').setAttribute('aria-current', v === 'dict' ? 'page' : 'false');
     if (!bar.hidden) renderBar();
   }
 
@@ -629,6 +632,82 @@
             <div class="wl-latin">${esc(w.la)}${noteHTML(w)}</div>
             <div class="wl-meaning">${w.senses.length > 1 ? `<ol>${w.senses.map(s => `<li>${remHTML(s)}</li>`).join('')}</ol>` : remHTML(w.senses[0])}
               ${w.extra ? `<span class="wl-extra">praesens: ${esc(w.extra)}</span>` : ''}</div>
+          </div>`).join('')}</div>
+      </section>`).join('') : '<p class="empty">Geen woorden gevonden.</p>';
+  }
+
+  /* ================= Dictionary (A–Z) ================= */
+
+  // Greek nouns are shown with their article but sorted on the noun: ὁ πολέμιος under π.
+  const ARTICLE_WORD = /^(?:ὁ|ἡ|τό|τὸ|οἱ|αἱ|τά|τὰ)\s+(?=\S)/;
+  const dictCache = new Map();
+  function dictEntries() {
+    if (dictCache.has(C.id)) return dictCache.get(C.id);
+    const collator = new Intl.Collator(C.id === 'gr' ? 'el' : 'nl', { sensitivity: 'base' });
+    // A word can come back in later lessons, sometimes without its grammar note or with other wording.
+    // Entries with the same spelling and note, or the same spelling and meaning, are one word.
+    const groups = [], byKey = new Map();
+    for (const w of C.words) {
+      const k = 'm¦' + w.la + '¦' + meaningPlain(w);
+      let g = byKey.get(w.key) || byKey.get(k);
+      if (!g) groups.push(g = []);
+      g.push(w); byKey.set(w.key, g); byKey.set(k, g);
+    }
+    const fullest = (a, b) => (!!b.note - !!a.note) || (meaningPlain(b).length - meaningPlain(a).length);
+    const entries = groups.map(g => {
+      const w = [...g].sort(fullest)[0];
+      const head = w.la.normalize('NFC');
+      const sort = (C.id === 'gr' ? head.replace(ARTICLE_WORD, '') : head).replace(/^[^\p{L}]+/u, '');
+      return { w, all: g, first: C.byId.get(g[0].lesson), sort, letter: stripMarks(sort.charAt(0)).toUpperCase(),
+        foreign: normForeign(w.la), dutch: normDutch(g.map(meaningPlain).join('; ')) };
+    }).sort((a, b) => collator.compare(a.sort, b.sort) || collator.compare(meaningPlain(a.w), meaningPlain(b.w)));
+    dictCache.set(C.id, entries);
+    return entries;
+  }
+  function openDict() {
+    closeDialog();
+    if (view === 'dict') return $('#dict-search')?.focus();
+    if (view === 'session' && !confirmQuit()) return;
+    // A practice session already has its own history entry: replace it, so Back leads home.
+    history[location.hash ? 'replaceState' : 'pushState']({ v: 'dict' }, '', '#woordenboek');
+    renderDict();
+    window.scrollTo(0, 0);
+  }
+  function renderDict(q = '') {
+    show('dict');
+    app.innerHTML = `
+      <div class="list-tools">
+        <button class="btn" data-action="dict-back">← Terug</button>
+        <input class="text-input" id="dict-search" type="search" placeholder="Zoek een woord (${C.lang} of Nederlands)…" value="${esc(q)}" autocomplete="off">
+      </div>
+      <div class="dict-head"><h2>Woordenboek ${C.lang}</h2><span id="dict-count"></span></div>
+      <nav class="dict-index" id="dict-index" aria-label="Spring naar letter"></nav>
+      <div id="dict-body"></div>`;
+    fillDict(q);
+  }
+  function fillDict(q) {
+    const ql = q.trim() ? normForeign(q) : '', qd = q.trim() ? normDutch(q) : '';
+    const entries = q.trim() ? dictEntries().filter(e => (ql && e.foreign.includes(ql)) || (qd && e.dutch.includes(qd))) : dictEntries();
+    const groups = [];
+    for (const e of entries) {
+      if (groups.at(-1)?.letter !== e.letter) groups.push({ letter: e.letter, entries: [] });
+      groups.at(-1).entries.push(e);
+    }
+    $('#dict-count').textContent = q.trim() ? `${plural(entries.length, 'woord', 'woorden')} gevonden`
+      : `${entries.length} woorden van ${C.id === 'gr' ? 'Α tot Ω' : 'A tot Z'}`;
+    $('#dict-index').innerHTML = groups.map(g => `<button data-action="dict-letter" data-l="${esc(g.letter)}">${esc(g.letter)}</button>`).join('');
+    // The dot shows the best-known variant of the word.
+    const dot = profile() ? all => dotHTML(all.reduce((a, b) => box(b) > box(a) ? b : a)) : () => '<span></span>';
+    const from = l => l.kind === 'tekst' ? `tekst ${l.id}` : `les ${l.chapter}`;
+    $('#dict-body').innerHTML = groups.length ? groups.map(g => `
+      <section class="word-section" data-letter="${esc(g.letter)}">
+        <h3>${esc(g.letter)} <small>${plural(g.entries.length, 'woord', 'woorden')}</small></h3>
+        <div class="words">${g.entries.map(({ w, all, first }) => `
+          <div class="word-row">${dot(all)}
+            <div class="wl-latin">${esc(w.la)}${noteHTML(w)}</div>
+            <div class="wl-meaning">${meaningHTML(w)}
+              ${w.extra ? `<span class="wl-extra">praesens: ${esc(w.extra)}</span>` : ''}
+              <span class="wl-extra">${from(first)}</span></div>
           </div>`).join('')}</div>
       </section>`).join('') : '<p class="empty">Geen woorden gevonden.</p>';
   }
@@ -934,7 +1013,15 @@
     if (!el || el.disabled) return;
     const a = el.dataset.action;
     switch (a) {
-      case 'home': closeDialog(); if (view === 'session' && !confirmQuit()) return; renderHome(); window.scrollTo(0, 0); break;
+      case 'home':
+        closeDialog();
+        if (view === 'session' && !confirmQuit()) return;
+        if (history.state?.v === 'dict') { history.back(); break; }
+        renderHome(); window.scrollTo(0, 0);
+        break;
+      case 'dict': openDict(); break;
+      case 'dict-back': history.state?.v === 'dict' ? history.back() : renderHome(); break;
+      case 'dict-letter': $(`[data-letter="${el.dataset.l}"]`)?.scrollIntoView({ block: 'start' }); break;
       case 'profiles': openProfiles(); break;
       case 'close': closeDialog(); break;
       case 'switch': state.current = el.dataset.pid; save(); closeDialog(); setCourse(profile().course); renderHome(); break;
@@ -1030,6 +1117,7 @@
   });
   document.addEventListener('input', e => {
     if (e.target.id === 'search') fillList(e.target.value);
+    else if (e.target.id === 'dict-search') fillDict(e.target.value);
   });
   document.addEventListener('keydown', e => {
     if (view !== 'session' || dlg.open || !S?.cur || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -1046,7 +1134,7 @@
     } else if (S.phase === 'shown' && k === 'Enter') { e.preventDefault(); next(); }
   });
   window.addEventListener('popstate', () => {
-    if (view === 'session' || view === 'results') { closeDialog(); renderHome(); }
+    if (view === 'session' || view === 'results' || view === 'dict') { closeDialog(); renderHome(); window.scrollTo(0, 0); }
   });
 
   function boot() {
