@@ -458,6 +458,15 @@ dialog::backdrop { background: rgba(30, 20, 10, .45); backdrop-filter: blur(3px)
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .empty { text-align: center; padding: 40px 16px; color: var(--ink-soft); font-weight: 700; }
 /* Dictionary */
+.dict-tools {
+  position: sticky; top: var(--topbar-h, 67px); z-index: 15;
+  display: flex; gap: 10px; align-items: center;
+  margin: -8px -16px 8px; padding: 8px 16px;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.dict-tools .text-input { flex: 1; min-width: 0; font-size: 16px; min-height: 46px; }
 .dict-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 6px 4px 10px; }
 .dict-head h2 { margin: 0; font-family: var(--serif); font-size: 26px; }
 .dict-head span { color: var(--ink-soft); font-size: 14px; font-weight: 700; }
@@ -468,7 +477,7 @@ dialog::backdrop { background: rgba(30, 20, 10, .45); backdrop-filter: blur(3px)
   font-family: var(--serif); font-size: 19px; font-weight: 700; color: var(--accent);
 }
 .dict-index button:hover { border-color: var(--accent); }
-.word-section[data-letter] { scroll-margin-top: 84px; }
+.word-section[data-letter] { scroll-margin-top: calc(var(--topbar-h, 67px) + 72px); }
 
 /* ---------- Welcome ---------- */
 .welcome { max-width: 520px; margin: 30px auto; text-align: center; display: flex; flex-direction: column; gap: 18px; }
@@ -511,6 +520,7 @@ dialog::backdrop { background: rgba(30, 20, 10, .45); backdrop-filter: blur(3px)
   #chip-name { display: none; }
   .dict-btn { padding: 0 12px; font-size: 18px; }
   .dict-btn-text { display: none; }
+  .dict-back-text { display: none; }
   .options { grid-template-columns: 1fr; }
   .option { min-height: 56px; }
   .card-face { min-height: 260px; }

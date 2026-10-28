@@ -362,6 +362,11 @@
 
   /* ================= UI chrome ================= */
 
+  // Bars that stick below the header need its height, which changes with the screen width.
+  const setTopbarH = () => document.documentElement.style.setProperty('--topbar-h', $('.topbar').offsetHeight + 'px');
+  setTopbarH();
+  new ResizeObserver(setTopbarH).observe($('.topbar'));
+
   function updateChip() {
     const p = profile();
     $('.profile-chip').hidden = !p;
@@ -676,14 +681,20 @@
   function renderDict(q = '') {
     show('dict');
     app.innerHTML = `
-      <div class="list-tools">
-        <button class="btn" data-action="dict-back">← Terug</button>
-        <input class="text-input" id="dict-search" type="search" placeholder="Zoek een woord (${C.lang} of Nederlands)…" value="${esc(q)}" autocomplete="off">
+      <div class="dict-tools">
+        <button class="btn" data-action="dict-back" aria-label="Terug">← <span class="dict-back-text">Terug</span></button>
+        <input class="text-input" id="dict-search" type="search" placeholder="Zoek in ${C.lang} of Nederlands…" value="${esc(q)}" autocomplete="off">
       </div>
       <div class="dict-head"><h2>Woordenboek ${C.lang}</h2><span id="dict-count"></span></div>
       <nav class="dict-index" id="dict-index" aria-label="Spring naar letter"></nav>
       <div id="dict-body"></div>`;
     fillDict(q);
+  }
+  // Searching from further down the list: scroll up so the first results sit right below the search bar.
+  function dictToTop() {
+    const head = $('.dict-head');
+    const top = head.getBoundingClientRect().top + window.scrollY - $('.topbar').offsetHeight - $('.dict-tools').offsetHeight;
+    if (window.scrollY > top) window.scrollTo(0, Math.max(0, top));
   }
   function fillDict(q) {
     const ql = q.trim() ? normForeign(q) : '', qd = q.trim() ? normDutch(q) : '';
@@ -1117,7 +1128,7 @@
   });
   document.addEventListener('input', e => {
     if (e.target.id === 'search') fillList(e.target.value);
-    else if (e.target.id === 'dict-search') fillDict(e.target.value);
+    else if (e.target.id === 'dict-search') { fillDict(e.target.value); dictToTop(); }
   });
   document.addEventListener('keydown', e => {
     if (view !== 'session' || dlg.open || !S?.cur || e.metaKey || e.ctrlKey || e.altKey) return;
