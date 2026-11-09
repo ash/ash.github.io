@@ -21,6 +21,16 @@ le cuir = het leer
 ancien, ancienne = oud
 vivre = leven, wonen
 jouer aux jeux vidéo = gamen
+plus tard = later
+parce que = omdat
+améliorer = verbeteren
+le mot = het woord
+se demander = zich afvragen
+plein de = volop
+ensemble = samen
+s’entendre avec = met elkaar kunnen opschieten
+vite = snel
+amitiés = groetjes
 `},
 { id: "9", chapter: 9, kind: "les", title: "Apprendre 9 – Écrire – phrases", subtitle: "Écrire · phrases", phrases: true, words: `
 Elle participera à un programme d’échange. = Ze zal meedoen aan een uitwisselingsprogramma.
