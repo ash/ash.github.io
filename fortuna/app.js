@@ -6,21 +6,32 @@
 
   const LEVEL_NAMES = ['Nieuw', 'Lastig', 'Bijna', 'Gekend', 'Gekend', 'Meester'];
 
-  // One entry per language ("course"). Lesson data comes from data.js / data-greek.js.
+  // One entry per language ("course"). Lesson data comes from data.js / data-greek.js / data-french.js.
+  // unit: what the book calls a numbered lesson ("Les 3", "Apprendre 8").
   const COURSES = [
     {
-      id: 'la', lang: 'Latijn', brand: 'Fortuna', mark: 'F', hello: 'Salve', watermark: 'SPQR',
+      id: 'la', lang: 'Latijn', brand: 'Fortuna', mark: 'F', hello: 'Salve', watermark: 'SPQR', unit: 'Les',
       raw: typeof LESSONS_RAW !== 'undefined' ? LESSONS_RAW : [],
       notes: { 9: 'Onthoud: comprehendĕre, fugĕre en defendĕre hebben dezelfde stam in het praesens als in het perfectum.' },
       praise: ['Recte!', 'Bene!', 'Optime!', 'Euge!'],
       tiers: ['Optime!', 'Bene!', 'Satis bene!', 'Perge!'],
+      typeHint: 'Typ het Latijnse woord…',
     },
     {
-      id: 'gr', lang: 'Grieks', brand: 'Pallas', mark: 'Π', hello: 'Χαῖρε', watermark: 'ΑΘΗΝΑΙ',
+      id: 'gr', lang: 'Grieks', brand: 'Pallas', mark: 'Π', hello: 'Χαῖρε', watermark: 'ΑΘΗΝΑΙ', unit: 'Les',
       raw: typeof GREEK_LESSONS_RAW !== 'undefined' ? GREEK_LESSONS_RAW : [],
       notes: { 5: 'Vanaf les 5 staan werkwoorden in de 1e persoon enkelvoud, bijv. λύω = losmaken (eigenlijk: ik maak los).' },
       praise: ['Εὖ γε!', 'Καλῶς!', 'Ὀρθῶς!', 'Ἄριστα!'],
       tiers: ['Ἄριστα!', 'Εὖ γε!', 'Καλῶς!', 'Θάρρει!'],
+      typeHint: 'Typ het Griekse woord (Latijnse letters mag ook)…',
+    },
+    {
+      id: 'fr', lang: 'Frans', brand: 'Lutèce', mark: 'L', hello: 'Bonjour', watermark: 'PARIS', unit: 'Apprendre',
+      raw: typeof FRENCH_LESSONS_RAW !== 'undefined' ? FRENCH_LESSONS_RAW : [],
+      notes: {},
+      praise: ['Bravo !', 'Très bien !', 'Super !', 'Parfait !'],
+      tiers: ['Parfait !', 'Très bien !', 'Pas mal !', 'Courage !'],
+      typeHint: 'Typ het Franse woord…',
     },
   ];
   let C = COURSES[0];
@@ -42,8 +53,8 @@
     c.lessons = c.raw.map(raw => {
       const l = { id: raw.id, chapter: raw.chapter, kind: raw.kind, subtitle: raw.subtitle || '' };
       if (raw.kind === 'les') {
-        l.title = `Woorden Les ${raw.chapter}${raw.subtitle ? ` (${raw.subtitle})` : ''}`;
-        l.short = l.label = `Les ${raw.chapter}`;
+        l.title = raw.title || `Woorden ${c.unit} ${raw.chapter}${raw.subtitle ? ` (${raw.subtitle})` : ''}`;
+        l.short = l.label = `${c.unit} ${raw.chapter}`;
       } else if (raw.kind === 'tekst') {
         l.title = raw.title || `Woorden tekst ${raw.id}`;
         l.short = `Tekst ${raw.id}`; l.label = raw.id;
@@ -54,7 +65,7 @@
       }
       l.words = raw.words.trim().split('\n').map(x => x.trim()).filter(Boolean).map((line, idx) => {
         const w = parseLine(line);
-        w.lesson = l.id; w.kind = l.kind; w.idx = idx; w.course = c.id;
+        w.lesson = l.id; w.kind = l.kind; w.idx = idx; w.course = c.id; w.phrase = !!raw.phrases;
         // Latin keys stay unprefixed so progress saved before Greek existed still matches.
         w.key = (c.id === 'la' ? '' : c.id + '¦') + [w.la, w.note, w.extra].join('¦');
         return w;
@@ -211,7 +222,10 @@
     return t.replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim();
   }
   const GREEK_ARTICLE = /^(?:o|e|to|oi|ai|ta) (?=\S)/;
-  const normForeign = s => C.id === 'gr' ? normGreek(s) : normLatin(s);
+  // French accents are optional too; œ can be typed as oe.
+  const normFrench = s => stripMarks(s).toLowerCase().replace(/œ/g, 'oe').replace(/æ/g, 'ae').replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  const NORM = { la: normLatin, gr: normGreek, fr: normFrench };
+  const normForeign = s => NORM[C.id](s);
   const PRONOUNS = /^(?:(?:hij|zij|ze|het|ik|jij|je|wij|we|jullie|de|een|te|zich)\s+)+/;
   function normDutch(s) {
     const t = stripMarks(s).toLowerCase().replace(/[’‘`´]/g, "'").replace(/[^a-z0-9'\s]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -253,7 +267,8 @@
     const out = new Set();
     for (const sense of w.senses) {
       const clean = sense.replace(/\{[^}]*\}/g, ' ').replace(/…/g, ' ');
-      for (const part of [clean, ...splitTop(clean, ',;')])
+      // A sentence is one answer; for a word, each comma-separated meaning counts on its own.
+      for (const part of w.phrase ? [clean] : [clean, ...splitTop(clean, ',;')])
         for (const a of expandOptional(part))
           for (const b of expandSlash(a)) { const n = normDutch(b); if (n) out.add(n); }
     }
@@ -263,8 +278,8 @@
   function foreignVariants(w) {
     if (lvCache.has(w)) return lvCache.get(w);
     const out = new Set();
-    const norm = w.course === 'gr' ? normGreek : normLatin;
-    for (const s of [w.la, splitTop(w.la, ',')[0]])
+    const norm = NORM[w.course];
+    for (const s of w.phrase ? [w.la] : [w.la, splitTop(w.la, ',')[0]])
       for (const v of expandOptional(s))
         for (const x of expandSlash(v)) {
           const n = norm(x);
@@ -329,7 +344,7 @@
     const target = item.w;
     const text = w => item.dir === 'la-nl' ? normDutch(meaningPlain(w)) : normForeign(w.la);
     const picked = [target];
-    const ok = c => !picked.some(p => overlaps(p, c) || text(p) === text(c)) && (c.kind === 'perfecta') === (target.kind === 'perfecta');
+    const ok = c => !picked.some(p => overlaps(p, c) || text(p) === text(c)) && (c.kind === 'perfecta') === (target.kind === 'perfecta') && c.phrase === target.phrase;
     const near = C.words.filter(w => Math.abs(C.byId.get(w.lesson).chapter - C.byId.get(target.lesson).chapter) <= 2);
     for (const src of [pool, near, C.words]) {
       for (const c of shuffle(src.slice())) {
@@ -438,8 +453,8 @@
     show('welcome');
     updateChip();
     app.innerHTML = `<section class="welcome">
-      <h1>Salve! <span class="welcome-gr">Χαῖρε!</span></h1>
-      <p>Hier oefen je je leerwoorden Latijn en Grieks. Wie gaat er oefenen?</p>
+      <h1>Salve! <span class="welcome-gr">Χαῖρε! Bonjour&nbsp;!</span></h1>
+      <p>Hier oefen je je leerwoorden Latijn, Grieks en Frans. Wie gaat er oefenen?</p>
       <div class="panel" id="welcome-form">
         ${profileFormHTML()}
         <button class="btn btn-primary" data-action="save-profile">Beginnen ▸</button>
@@ -547,9 +562,9 @@
     const allSel = nSel === ch.lessons.length;
     return `<article class="chapter ${nSel ? 'has-selection' : ''}">
       <div class="chapter-head">
-        <button class="chapter-title" data-action="toggle-chapter" data-ch="${ch.n}" aria-label="${allSel ? 'Niets' : 'Alles'} kiezen van les ${ch.n}">
+        <button class="chapter-title" data-action="toggle-chapter" data-ch="${ch.n}" aria-label="${allSel ? 'Niets' : 'Alles'} kiezen van ${C.unit.toLowerCase()} ${ch.n}">
           <span class="chapter-num">${ch.n}</span>
-          <span><span class="chapter-name">Les ${ch.n}</span>
+          <span><span class="chapter-name">${C.unit} ${ch.n}</span>
           <span class="chapter-meta">${st.n} woorden · ${allSel ? 'alles gekozen' : 'tik hier voor alles'}</span></span>
         </button>
         <span class="chapter-pct" title="Hoe goed je deze les kent">${st.pct}%</span>
@@ -565,7 +580,7 @@
     return `<button class="chapter chapter-single ${on ? 'has-selection' : ''}" data-action="toggle" data-id="${l.id}" aria-pressed="${on}" title="${esc(l.title)}">
       <span class="chapter-head">
         <span class="chapter-title"><span class="chapter-num">${ch.n}</span>
-          <span><span class="chapter-name">Les ${ch.n}</span>
+          <span><span class="chapter-name">${C.unit} ${ch.n}</span>
           <span class="chapter-meta">${l.subtitle ? esc(l.subtitle) + ' · ' : ''}${l.words.length} woorden</span></span></span>
         <span class="chip-check" aria-hidden="true">✓</span>
       </span>
@@ -643,16 +658,18 @@
 
   /* ================= Dictionary (A–Z) ================= */
 
-  // Greek nouns are shown with their article but sorted on the noun: ὁ πολέμιος under π.
-  const ARTICLE_WORD = /^(?:ὁ|ἡ|τό|τὸ|οἱ|αἱ|τά|τὰ)\s+(?=\S)/;
+  // Greek and French nouns are shown with their article but sorted on the noun: ὁ πολέμιος under π, le cuir under c.
+  const ARTICLE_WORD = { gr: /^(?:ὁ|ἡ|τό|τὸ|οἱ|αἱ|τά|τὰ)\s+(?=\S)/, fr: /^(?:(?:le|la|les)\s+|l['’])(?=\S)/i };
   const dictCache = new Map();
   function dictEntries() {
     if (dictCache.has(C.id)) return dictCache.get(C.id);
-    const collator = new Intl.Collator(C.id === 'gr' ? 'el' : 'nl', { sensitivity: 'base' });
+    const collator = new Intl.Collator({ gr: 'el', fr: 'fr' }[C.id] || 'nl', { sensitivity: 'base' });
     // A word can come back in later lessons, sometimes without its grammar note or with other wording.
     // Entries with the same spelling and note, or the same spelling and meaning, are one word.
+    // Whole sentences are not dictionary words; the Woordenlijst still has them.
     const groups = [], byKey = new Map();
     for (const w of C.words) {
+      if (w.phrase) continue;
       const k = 'm¦' + w.la + '¦' + meaningPlain(w);
       let g = byKey.get(w.key) || byKey.get(k);
       if (!g) groups.push(g = []);
@@ -662,7 +679,7 @@
     const entries = groups.map(g => {
       const w = [...g].sort(fullest)[0];
       const head = w.la.normalize('NFC');
-      const sort = (C.id === 'gr' ? head.replace(ARTICLE_WORD, '') : head).replace(/^[^\p{L}]+/u, '');
+      const sort = (ARTICLE_WORD[C.id] ? head.replace(ARTICLE_WORD[C.id], '') : head).replace(/^[^\p{L}]+/u, '');
       return { w, all: g, first: C.byId.get(g[0].lesson), sort, letter: stripMarks(sort.charAt(0)).toUpperCase(),
         foreign: normForeign(w.la), dutch: normDutch(g.map(meaningPlain).join('; ')) };
     }).sort((a, b) => collator.compare(a.sort, b.sort) || collator.compare(meaningPlain(a.w), meaningPlain(b.w)));
@@ -709,7 +726,7 @@
     $('#dict-index').innerHTML = groups.map(g => `<button data-action="dict-letter" data-l="${esc(g.letter)}">${esc(g.letter)}</button>`).join('');
     // The dot shows the best-known variant of the word.
     const dot = profile() ? all => dotHTML(all.reduce((a, b) => box(b) > box(a) ? b : a)) : () => '<span></span>';
-    const from = l => l.kind === 'tekst' ? `tekst ${l.id}` : `les ${l.chapter}`;
+    const from = l => l.kind === 'tekst' ? `tekst ${l.id}` : `${C.unit.toLowerCase()} ${l.chapter}`;
     $('#dict-body').innerHTML = groups.length ? groups.map(g => `
       <section class="word-section" data-letter="${esc(g.letter)}">
         <h3>${esc(g.letter)} <small>${plural(g.entries.length, 'woord', 'woorden')}</small></h3>
@@ -933,7 +950,7 @@
     return `<div class="card-static"><div class="card-face">${faceHTML(it, 'q')}</div></div>
       <form class="type-form" data-form="type" autocomplete="off">
         <input class="text-input ${cls}" id="answer" name="answer" aria-label="Jouw antwoord"
-          placeholder="${it.dir === 'la-nl' ? 'Typ de betekenis…' : C.id === 'gr' ? 'Typ het Griekse woord (Latijnse letters mag ook)…' : 'Typ het Latijnse woord…'}"
+          placeholder="${it.dir === 'la-nl' ? 'Typ de betekenis…' : it.w.phrase ? 'Typ de hele zin…' : C.typeHint}"
           autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done"
           value="${esc(it.typed || '')}" ${shown ? 'disabled' : ''}>
         ${shown ? '' : '<button class="btn btn-primary" type="submit">Check</button>'}

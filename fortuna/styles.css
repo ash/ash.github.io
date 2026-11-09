@@ -70,6 +70,11 @@
   :root[data-course="gr"]:not([data-theme="light"]) { --accent: #6fa9d8; --accent-ink: #11171d; --accent-soft: #1d3447; }
 }
 :root[data-course="gr"][data-theme="dark"] { --accent: #6fa9d8; --accent-ink: #11171d; --accent-soft: #1d3447; }
+:root[data-course="fr"] { --accent: #6b4e9b; --accent-ink: #f7f3fc; --accent-soft: #e6ddf3; }
+@media (prefers-color-scheme: dark) {
+  :root[data-course="fr"]:not([data-theme="light"]) { --accent: #b49ae0; --accent-ink: #16121c; --accent-soft: #33284a; }
+}
+:root[data-course="fr"][data-theme="dark"] { --accent: #b49ae0; --accent-ink: #16121c; --accent-soft: #33284a; }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -497,9 +502,6 @@ dialog::backdrop { background: rgba(30, 20, 10, .45); backdrop-filter: blur(3px)
 @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 420px) {
-  .brand-text { display: none; }
-}
 @media (max-width: 640px) {
   main { padding: 14px 16px 150px; }
   .hero { grid-template-columns: 1fr; padding: 18px; }
@@ -529,6 +531,15 @@ dialog::backdrop { background: rgba(30, 20, 10, .45); backdrop-filter: blur(3px)
   .practice-actions { width: 100%; }
   .practice-actions .btn { flex: 1; }
   .seg button { font-size: 13px; padding: 9px 4px; }
+}
+/* On a phone the three language tabs, the Woordenboek button and the player chip just fit in the top bar. */
+@media (max-width: 420px) {
+  .brand { padding: 0; }
+  .brand-text { display: none; }
+  .topbar { gap: 8px; }
+  .topbar .profile-chip { margin-left: 0; }
+  .lang-tabs { gap: 2px; padding: 3px; }
+  .lang-tabs button { padding: 7px 8px; }
 }
 @media (hover: none) { kbd { display: none; } }
 @media print {
